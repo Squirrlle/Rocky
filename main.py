@@ -104,20 +104,22 @@ async def roll_dice(ctx, *, command: str):
     match = re.match(r'(?:(\d*)d(\d+))(?:\s*([+-]?)\s*(\d+))?(?:\s*(a|d|e))?(?:\s*!\s*(\d+))?', command)
     
     if match:
+        """Checking for advantage, disadvantage or elven accuracy"""
         drop_lowest = match.group(5) == 'a'
         drop_highest = match.group(5) == 'd'
         drop_two_lowest = match.group(5) == 'e'
         threshold = int(match.group(6)) if match.group(6) else None
         
+        """Gets how many dice to roll and of what type"""
         x = 2 if (drop_lowest or drop_highest) else (int(match.group(1)) if match.group(1) else (3 if drop_two_lowest else 1))
         y = int(match.group(2))
         z = 0
         if match.group(3) and match.group(4):
             z = int(match.group(3) + match.group(4))
-
         rolls = [random.randint(1, y) for _ in range(x)]
         dropped_rolls = []
-        
+
+    """Rolls the dice and gets how many 6s"""    
     rolls = [random.randint(1, y) for _ in range(x)]
     count_of_sixes = rolls.count(6)
 
@@ -128,6 +130,7 @@ async def roll_dice(ctx, *, command: str):
                 dropped_rolls.append(roll)
                 rolls.remove(roll)
 
+    """Handles advantage and disadvantage"""
     if drop_lowest and rolls:
         dropped_roll = min(rolls)
         rolls.remove(dropped_roll)
@@ -142,6 +145,7 @@ async def roll_dice(ctx, *, command: str):
             rolls.remove(dropped_roll)
             dropped_rolls.append(dropped_roll)
 
+    """Sums the rolls and creates the base for the output"""
     total = sum(rolls) + z
     rolls_str = ', '.join(map(str, rolls))
     dropped_str = ', '.join(map(str, dropped_rolls)) if dropped_rolls else None
@@ -150,8 +154,10 @@ async def roll_dice(ctx, *, command: str):
     if dropped_str:
         num_dropped = len(dropped_rolls)
         num_remaining = len(rolls)
+        """Handles dropped rolls and counting 6s for Warhammer"""
         sixes_message = ""
         if y == 6:
+            """Only count 6s if the dice is a 6"""
             sixes_message = f"Dropped: {num_dropped} rolls: {dropped_str}, Remaining: {num_remaining} rolls, Count of 6s: {count_of_sixes}"
         else:
             sixes_message = f"Dropped: {dropped_str}"
